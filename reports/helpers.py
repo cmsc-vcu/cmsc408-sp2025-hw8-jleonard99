@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import ArgumentError, NoSuchModuleError, OperationalError, ProgrammingError
 
 
-def run_sql_and_return_df(cnx, sql, show_size=True):
+def run_sql_and_return_df(cnx, sql, show_size=False):
     """Given an SQL command and connection string, return a DataFrame."""
 
     # Check if the connection is None
@@ -28,6 +28,17 @@ def run_sql_and_return_df(cnx, sql, show_size=True):
             df = pd.DataFrame([["no records returned"]+ [''] * (len(df.columns) - 1) ], columns=df.columns)
 
         df = df.replace("None","NULL")
+    
+        if show_size:
+            summary_row = {col: '' for col in df.columns}
+            summary_row[df.columns[0]] = f'Rows: {len(df)}'
+            if len(df.columns) > 1:
+                summary_row[df.columns[1]] = f'Columns: {len(df.columns)}'
+            elif len(df.columns)==1 :
+                summary_row[df.columns[0]] = f'Rows: {len(df)} x Columns: {len(df.columns)}'
+
+            ##df = pd.concat([df, pd.DataFrame([summary_row])], ignore_index=True)
+
         return df
 
     except OperationalError as e:
